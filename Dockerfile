@@ -1,17 +1,11 @@
-FROM golang:1.24 AS builder
+FROM nginx:alpine
 
 ARG SERVICE_VERSION
 ENV SERVICE_VERSION=${SERVICE_VERSION}
 
-WORKDIR /website
-COPY . .
+COPY ./website /usr/share/nginx/html
 
-RUN find . -type f -exec sed -i 's/#SERVICE_VERSION#/$SERVICE_VERSION/g' {} \;
-
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
-
-FROM scratch
-COPY --from=builder /website/app /app
+RUN find ./usr/share/nginx/html -type f -exec sh -c 'sed -i "s/#SERVICE_VERSION#/${SERVICE_VERSION}/g" "$0"' {} \;
 
 EXPOSE 80
-CMD ["./app"]
+CMD ["nginx", "-g", "daemon off;"]
